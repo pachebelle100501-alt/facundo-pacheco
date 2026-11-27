@@ -95,8 +95,10 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
       <label class="field"><span>Alias o CBU de la administración</span><input type="text" id="cAlias" placeholder="ej. consorcio.edificio"></label>
       <label class="field"><span>Titular de la cuenta</span><input type="text" id="cTit" placeholder="Nombre y apellido"></label>
       <label class="field"><span>Día de vencimiento de las expensas</span><input type="number" id="cDia" min="1" max="28" inputmode="numeric" placeholder="10"></label>
+      <label class="row" style="justify-content:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="cMail" style="width:22px;height:22px;accent-color:var(--accent)"><span>Enviar avisos por correo automáticamente al día siguiente del vencimiento</span></label>
       <button class="btn ghost" id="cSave">Guardar datos de cobro</button>
     </div>
+    <button class="btn" id="bRapido">Envío rápido por WhatsApp</button>
     <div class="panel" id="aList"><div class="empty">Cargando…</div></div>
     <p class="note">Niveles: 1 Recordatorio amable · 2 Aviso de mora · 3 Aviso previo a acciones legales. El nivel sugerido sube solo con cada aviso enviado después del vencimiento. Revisá los textos legales con el abogado del consorcio antes de usarlos.</p>
   </section>
@@ -252,7 +254,7 @@ function textoAviso(u,n){
 }
 const telLimpio=t=>String(t||"").replace(/\D/g,"");
 function renderAvisos(){
-  if(!cfgLoaded){$("cAlias").value=cfg.alias||"";$("cTit").value=cfg.titular||"";$("cDia").value=cfg.dia||10}
+  if(!cfgLoaded){$("cAlias").value=cfg.alias||"";$("cTit").value=cfg.titular||"";$("cDia").value=cfg.dia||10;$("cMail").checked=!!cfg.mailAuto}
   const deudores=units.filter(u=>tot(u)>0).sort((a,b)=>tot(b)-tot(a));
   $("aTit").textContent=`${deudores.length} unidades con deuda`+(vencido()?" · vencido":"");
   if(!deudores.length){$("aList").innerHTML='<div class="empty">No hay unidades con deuda.</div>';return}
@@ -263,10 +265,12 @@ function renderAvisos(){
       <div class="note">${ult?`Último aviso: nivel ${ult.nivel} el ${new Date(ult.fecha).toLocaleDateString("es-AR")}`:"Sin avisos enviados"}</div>
       <div class="btns"><input type="text" inputmode="tel" id="tel-${esc(u.id)}" data-tel="${esc(u.id)}" placeholder="WhatsApp (ej. 3415551234)" value="${esc(u.tel||"")}">
       <select id="niv-${esc(u.id)}" data-niv="${esc(u.id)}" style="font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)">${[1,2,3].map(k=>`<option value="${k}" ${k===n?"selected":""}>${k}. ${NIVELES[k]}</option>`).join("")}</select></div>
+      <input type="email" inputmode="email" id="mail-${esc(u.id)}" data-mail="${esc(u.id)}" placeholder="Correo del propietario/inquilino" value="${esc(u.email||"")}">
       <div class="btns"><a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="#" data-wa="${esc(u.id)}">Enviar por WhatsApp</a><button class="btn ghost" data-cp="${esc(u.id)}">Copiar texto</button></div>
     </div>`}).join("");
   const L=$("aList");
   L.querySelectorAll("[data-tel]").forEach(i=>i.onchange=async()=>{if(!db)return;try{await db.doc("unidades/"+i.dataset.tel).update({tel:i.value.trim().slice(0,30)});toast("Teléfono guardado")}catch(e){toast("No se pudo guardar el teléfono")}});
+  L.querySelectorAll("[data-mail]").forEach(i=>i.onchange=async()=>{if(!db)return;const v=i.value.trim().slice(0,120);if(v&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){toast("Revisá el correo: no parece válido");return}try{await db.doc("unidades/"+i.dataset.mail).update({email:v});toast("Correo guardado")}catch(e){toast("No se pudo guardar el correo")}});
   const nivelDe=id=>Number($("niv-"+id).value)||1;
   L.querySelectorAll("[data-cp]").forEach(b=>b.onclick=async()=>{const u=units.find(x=>x.id===b.dataset.cp);try{await navigator.clipboard.writeText(textoAviso(u,nivelDe(u.id)));toast("Texto copiado")}catch(e){toast("No se pudo copiar")}registrar(u,nivelDe(u.id))});
   const waHref=u=>{const tel=telLimpio($("tel-"+u.id).value);if(!tel)return"#";const num=tel.startsWith("54")?tel:"549"+tel;return "https://wa.me/"+num+"?text="+encodeURIComponent(textoAviso(u,nivelDe(u.id)))};
@@ -277,9 +281,34 @@ function renderAvisos(){
     a.onclick=e=>{if(a.getAttribute("href")==="#"){e.preventDefault();toast("Cargá el WhatsApp de la unidad");return}registrar(u,nivelDe(u.id))};
   });
 }
-async function registrar(u,n){if(!db)return;try{await db.doc("unidades/"+u.id).update({ultimoAviso:{nivel:n,fecha:new Date().toISOString()}});await db.collection("avisos").add({unidad:u.id,nivel:n,monto:tot(u),fecha:new Date().toISOString()})}catch(e){}}
+async function registrar(u,n){if(!db)return;try{await db.doc("unidades/"+u.id).update({ultimoAviso:{nivel:n,fecha:new Date().toISOString(),canal:"whatsapp"}});await db.collection("avisos").add({unidad:u.id,nivel:n,monto:tot(u),canal:"whatsapp",fecha:new Date().toISOString()})}catch(e){}}
+
+// Envío rápido: recorre los deudores con WhatsApp cargado que no recibieron aviso en los últimos 7 días
+let colaSaltadas=new Set();
+function pendientesRapido(){
+  return units.filter(u=>tot(u)>0&&telLimpio(u.tel)&&!colaSaltadas.has(u.id)&&(!u.ultimoAviso||(Date.now()-new Date(u.ultimoAviso.fecha).getTime())/864e5>=7)).sort((a,b)=>tot(b)-tot(a));
+}
+function abrirRapido(){
+  const cola=pendientesRapido();
+  const sinTel=units.filter(u=>tot(u)>0&&!telLimpio(u.tel)).length;
+  if(!cola.length){
+    $("card").innerHTML=`<h2>No quedan avisos por enviar</h2><p class="note">${sinTel?`${sinTel} unidades con deuda no tienen WhatsApp cargado.`:"Todas las unidades con deuda recibieron aviso en los últimos 7 días."}</p><button class="btn ghost" id="rClose">Cerrar</button>`;
+    $("rClose").onclick=()=>{colaSaltadas.clear();closeSheet()};$("sheet").hidden=false;return;
+  }
+  const u=cola[0],n=nivelSugerido(u),tel=telLimpio(u.tel),num=tel.startsWith("54")?tel:"549"+tel;
+  $("card").innerHTML=`<div class="head"><div><div class="eyebrow">Envío rápido · quedan ${cola.length}</div><h1>Unidad ${esc(u.id)} · ${fmt(tot(u))}</h1></div><span class="tag debe">Nivel ${n}</span></div>
+    <div class="msg" id="rMsg"></div>
+    <a class="btn" id="rSend" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${num}?text=${encodeURIComponent(textoAviso(u,n))}">Enviar por WhatsApp</a>
+    <div class="btns"><button class="btn ghost" id="rSkip">Saltar</button><button class="btn ghost" id="rClose">Terminar</button></div>`;
+  $("rMsg").textContent=textoAviso(u,n);
+  $("rSend").onclick=()=>{registrar(u,n);colaSaltadas.add(u.id);setTimeout(abrirRapido,400)};
+  $("rSkip").onclick=()=>{colaSaltadas.add(u.id);abrirRapido()};
+  $("rClose").onclick=()=>{colaSaltadas.clear();closeSheet()};
+  $("sheet").hidden=false;
+}
+$("bRapido").onclick=()=>{colaSaltadas.clear();abrirRapido()};
 $("cSave").onclick=async()=>{
-  if(!db)return;const d={alias:$("cAlias").value.trim().slice(0,80),titular:$("cTit").value.trim().slice(0,80),dia:Math.min(28,Math.max(1,Number($("cDia").value)||10))};
+  if(!db)return;const d={alias:$("cAlias").value.trim().slice(0,80),titular:$("cTit").value.trim().slice(0,80),dia:Math.min(28,Math.max(1,Number($("cDia").value)||10)),mailAuto:$("cMail").checked};
   try{await db.doc("config/general").set(d);toast("Datos de cobro guardados")}catch(e){toast("No se pudo guardar")}
 };
 
