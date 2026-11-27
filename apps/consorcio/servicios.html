@@ -125,6 +125,7 @@ function render(){
       <div class="alias" id="payAlias">${esc(p.alias)}</div>
       ${p.titular?`<div class="note">Titular: ${esc(p.titular)}${p.cbu?" · CBU "+esc(p.cbu):""}</div>`:""}
       <div class="acts"><button class="btn" id="bCopyAlias">Copiar alias</button>${wa?`<a class="btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${wa.startsWith("54")?wa:"549"+wa}?text=${encodeURIComponent("Hola! Envío el comprobante de pago de expensas de la unidad: ")}">Enviar comprobante por WhatsApp</a>`:""}</div>
+      <div><span class="tag ok">Del 1 al 15: sin recargo</span> <span class="tag pend">Desde el 16: 10% de recargo</span></div>
       <div class="note">Indicá tu unidad en el concepto de la transferencia. Para consultar tu deuda, escribí a la administración.</div>`;
     $("bCopyAlias").onclick=async()=>{try{await navigator.clipboard.writeText(p.alias);toast("Alias copiado")}catch(e){const r=document.createRange();r.selectNodeContents($("payAlias"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Alias seleccionado: copialo")}};
   } else {

@@ -94,7 +94,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
       <div class="eyebrow">Datos de cobro (van en cada mensaje)</div>
       <label class="field"><span>Alias o CBU de la administración</span><input type="text" id="cAlias" placeholder="ej. consorcio.edificio"></label>
       <label class="field"><span>Titular de la cuenta</span><input type="text" id="cTit" placeholder="Nombre y apellido"></label>
-      <label class="field"><span>Día de vencimiento de las expensas</span><input type="number" id="cDia" min="1" max="28" inputmode="numeric" placeholder="10"></label>
+      <div class="btns"><label class="field"><span>Último día sin recargo</span><input type="number" id="cDia" min="1" max="28" inputmode="numeric" placeholder="15"></label><label class="field"><span>Recargo después (%)</span><input type="number" id="cRec" min="0" max="100" inputmode="decimal" placeholder="10"></label></div>
       <label class="row" style="justify-content:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="cMail" style="width:22px;height:22px;accent-color:var(--accent)"><span>Enviar avisos por correo automáticamente al día siguiente del vencimiento</span></label>
       <button class="btn ghost" id="cSave">Guardar datos de cobro</button>
     </div>
@@ -161,6 +161,7 @@ function mensaje(u){
   if(u.cochera) m+=`• Cochera: ${fmt(u.cochera)}\n`;
   if(u.extraord) m+=`• Gastos extraordinarios: ${fmt(u.extraord)}\n`;
   m+=`Total adeudado: ${fmt(t)}`;
+  m+=pctRecargo()?`\nCon recargo del ${pctRecargo()}% por pago fuera de término: ${fmt(totPagar(u))}`:`\nPagando hasta el día ${cfg.dia||15} no tiene recargo. Desde el día ${(cfg.dia||15)+1} se aplica un ${cfg.recargo??10}%.`;
   if(cfg.alias) m+=`\nPodés pagar por transferencia al alias ${cfg.alias}${cfg.titular?" (titular: "+cfg.titular+")":""}.`;
   return m;
 }
@@ -173,7 +174,9 @@ function openUnit(id){
     <div><div class="row"><span>Expensas</span><b class="num">${fmt(u.expensas)}</b></div>
     <div class="row"><span>Cochera</span><b class="num">${fmt(u.cochera)}</b></div>
     <div class="row"><span>Gastos extraordinarios</span><b class="num">${fmt(u.extraord)}</b></div>
-    <div class="row total"><span>Total</span><span class="num">${fmt(t)}</span></div></div>
+    <div class="row"><span>Subtotal</span><b class="num">${fmt(t)}</b></div>
+    <div class="row"><span>Recargo ${pctRecargo()?pctRecargo()+"% (desde el día "+((cfg.dia||15)+1)+")":"(sin recargo hasta el día "+(cfg.dia||15)+")"}</span><b class="num">${fmt(totPagar(u)-t)}</b></div>
+    <div class="row total"><span>Total a pagar hoy</span><span class="num">${fmt(totPagar(u))}</span></div></div>
     <div class="msg" id="msg"></div>
     <div class="btns"><button class="btn" id="bCopy">Copiar mensaje</button><button class="btn ghost" id="bPago">Registrar pago</button></div>
     <button class="btn ghost" id="bClose">Cerrar</button>`;
@@ -234,9 +237,12 @@ async function togglePago(i,val){
 }
 
 // ---- Avisos ----
-let cfg={alias:"",titular:"",dia:10}, cfgLoaded=false;
+let cfg={alias:"",titular:"",dia:15,recargo:10}, cfgLoaded=false;
 const NIVELES={1:"Recordatorio",2:"Aviso de mora",3:"Aviso previo a acciones legales"};
-function vencido(){return new Date().getDate()>(cfg.dia||10)}
+function vencido(){return new Date().getDate()>(cfg.dia||15)}
+function pctRecargo(){return vencido()?Number(cfg.recargo??10)||0:0}
+function totPagar(u){return Math.round(tot(u)*(1+pctRecargo()/100))}
+function recargoTxt(u){return pctRecargo()?` Por pago fuera de término (después del día ${cfg.dia||15}) corresponde un recargo del ${pctRecargo()}%: total a pagar ${fmt(totPagar(u))}.`:` Pagando hasta el día ${cfg.dia||15} no tiene recargo; desde el día ${(cfg.dia||15)+1} se aplica un ${cfg.recargo??10}%.`}
 function nivelSugerido(u){
   const ult=u.ultimoAviso;
   if(!vencido()&&!ult)return 1;
@@ -248,20 +254,20 @@ function detalle(u){const p=[];if(u.expensas)p.push("expensas "+fmt(u.expensas))
 function pagoTxt(){return cfg.alias?`por transferencia al alias ${cfg.alias}${cfg.titular?" (titular: "+cfg.titular+")":""}`:"por los medios habituales de la administración"}
 function textoAviso(u,n){
   const T=fmt(tot(u));
-  if(n===1)return `Hola! Le recordamos que la unidad ${u.id} registra un saldo pendiente de ${T} (${detalle(u)}).\nPuede abonarlo ${pagoTxt()}.\nSi ya pagó, envíenos el comprobante y desestime este mensaje. ¡Muchas gracias!\nAdministración del consorcio`;
-  if(n===2)return `Estimado/a propietario/a de la unidad ${u.id}:\nVencido el plazo de pago (día ${cfg.dia||10} de cada mes), la unidad registra una deuda de ${T} (${detalle(u)}).\nLe recordamos que, según el reglamento de copropiedad, las sumas en mora generan los intereses que fija el reglamento o la asamblea.\nLe solicitamos regularizar dentro de los próximos 10 días ${pagoTxt()}. Si necesita un plan de pagos, comuníquese con la administración.\nAdministración del consorcio`;
-  return `Estimado/a propietario/a de la unidad ${u.id}:\nA la fecha la unidad registra una deuda de ${T} (${detalle(u)}), pese a los avisos enviados.\nLe informamos que, conforme al art. 2048 del Código Civil y Comercial de la Nación, el certificado de deuda emitido por la administración constituye título ejecutivo, lo que habilita su cobro por vía judicial (juicio ejecutivo), con intereses y costas a cargo del deudor.\nAntes de enviar la intimación formal por carta documento, lo invitamos a regularizar o acordar un plan de pagos dentro de los próximos 5 días hábiles, ${pagoTxt()}.\nAdministración del consorcio`;
+  if(n===1)return `Hola! Le recordamos que la unidad ${u.id} registra un saldo pendiente de ${T} (${detalle(u)}).${recargoTxt(u)}\nPuede abonarlo ${pagoTxt()}.\nSi ya pagó, envíenos el comprobante y desestime este mensaje. ¡Muchas gracias!\nAdministración del consorcio`;
+  if(n===2)return `Estimado/a propietario/a de la unidad ${u.id}:\nVencido el plazo de pago (día ${cfg.dia||15} de cada mes), la unidad registra una deuda de ${T} (${detalle(u)}).${recargoTxt(u)}\nLe recordamos que, según el reglamento de copropiedad, las sumas en mora generan los intereses que fija el reglamento o la asamblea.\nLe solicitamos regularizar dentro de los próximos 10 días ${pagoTxt()}. Si necesita un plan de pagos, comuníquese con la administración.\nAdministración del consorcio`;
+  return `Estimado/a propietario/a de la unidad ${u.id}:\nA la fecha la unidad registra una deuda de ${T} (${detalle(u)}), pese a los avisos enviados.${recargoTxt(u)}\nLe informamos que, conforme al art. 2048 del Código Civil y Comercial de la Nación, el certificado de deuda emitido por la administración constituye título ejecutivo, lo que habilita su cobro por vía judicial (juicio ejecutivo), con intereses y costas a cargo del deudor.\nAntes de enviar la intimación formal por carta documento, lo invitamos a regularizar o acordar un plan de pagos dentro de los próximos 5 días hábiles, ${pagoTxt()}.\nAdministración del consorcio`;
 }
 const telLimpio=t=>String(t||"").replace(/\D/g,"");
 function renderAvisos(){
-  if(!cfgLoaded){$("cAlias").value=cfg.alias||"";$("cTit").value=cfg.titular||"";$("cDia").value=cfg.dia||10;$("cMail").checked=!!cfg.mailAuto}
+  if(!cfgLoaded){$("cAlias").value=cfg.alias||"";$("cTit").value=cfg.titular||"";$("cDia").value=cfg.dia||15;$("cRec").value=cfg.recargo??10;$("cMail").checked=!!cfg.mailAuto}
   const deudores=units.filter(u=>tot(u)>0).sort((a,b)=>tot(b)-tot(a));
   $("aTit").textContent=`${deudores.length} unidades con deuda`+(vencido()?" · vencido":"");
   if(!deudores.length){$("aList").innerHTML='<div class="empty">No hay unidades con deuda.</div>';return}
   $("aList").innerHTML=deudores.map(u=>{
     const n=nivelSugerido(u);const ult=u.ultimoAviso;
     return `<div class="row" style="display:grid;gap:8px">
-      <div style="display:flex;justify-content:space-between;gap:12px"><b>${esc(u.id)}</b><b class="num">${fmt(tot(u))}</b></div>
+      <div style="display:flex;justify-content:space-between;gap:12px"><b>${esc(u.id)}</b><b class="num">${fmt(totPagar(u))}</b></div>
       <div class="note">${ult?`Último aviso: nivel ${ult.nivel} el ${new Date(ult.fecha).toLocaleDateString("es-AR")}`:"Sin avisos enviados"}</div>
       <div class="btns"><input type="text" inputmode="tel" id="tel-${esc(u.id)}" data-tel="${esc(u.id)}" placeholder="WhatsApp (ej. 3415551234)" value="${esc(u.tel||"")}">
       <select id="niv-${esc(u.id)}" data-niv="${esc(u.id)}" style="font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)">${[1,2,3].map(k=>`<option value="${k}" ${k===n?"selected":""}>${k}. ${NIVELES[k]}</option>`).join("")}</select></div>
@@ -296,7 +302,7 @@ function abrirRapido(){
     $("rClose").onclick=()=>{colaSaltadas.clear();closeSheet()};$("sheet").hidden=false;return;
   }
   const u=cola[0],n=nivelSugerido(u),tel=telLimpio(u.tel),num=tel.startsWith("54")?tel:"549"+tel;
-  $("card").innerHTML=`<div class="head"><div><div class="eyebrow">Envío rápido · quedan ${cola.length}</div><h1>Unidad ${esc(u.id)} · ${fmt(tot(u))}</h1></div><span class="tag debe">Nivel ${n}</span></div>
+  $("card").innerHTML=`<div class="head"><div><div class="eyebrow">Envío rápido · quedan ${cola.length}</div><h1>Unidad ${esc(u.id)} · ${fmt(totPagar(u))}</h1></div><span class="tag debe">Nivel ${n}</span></div>
     <div class="msg" id="rMsg"></div>
     <a class="btn" id="rSend" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${num}?text=${encodeURIComponent(textoAviso(u,n))}">Enviar por WhatsApp</a>
     <div class="btns"><button class="btn ghost" id="rSkip">Saltar</button><button class="btn ghost" id="rClose">Terminar</button></div>`;
@@ -308,7 +314,7 @@ function abrirRapido(){
 }
 $("bRapido").onclick=()=>{colaSaltadas.clear();abrirRapido()};
 $("cSave").onclick=async()=>{
-  if(!db)return;const d={alias:$("cAlias").value.trim().slice(0,80),titular:$("cTit").value.trim().slice(0,80),dia:Math.min(28,Math.max(1,Number($("cDia").value)||10)),mailAuto:$("cMail").checked};
+  if(!db)return;const d={alias:$("cAlias").value.trim().slice(0,80),titular:$("cTit").value.trim().slice(0,80),dia:Math.min(28,Math.max(1,Number($("cDia").value)||15)),recargo:Math.min(100,Math.max(0,Number($("cRec").value)||0)),mailAuto:$("cMail").checked};
   try{await db.doc("config/general").set(d);toast("Datos de cobro guardados")}catch(e){toast("No se pudo guardar")}
 };
 
