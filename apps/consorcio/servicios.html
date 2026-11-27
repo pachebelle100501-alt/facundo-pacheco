@@ -63,16 +63,24 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(-
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:30}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 footer{text-align:center}
+.install{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.steps{margin:0;padding-left:20px;display:grid;gap:8px}
+.os{display:flex;gap:8px}
+.ico{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-radius:6px;font-weight:700}
 .pay{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:16px;display:grid;gap:10px}
 .pay .alias{font-family:var(--f-display);font-size:1.35rem;font-weight:700;overflow-wrap:anywhere;user-select:all}
 .pay .acts{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 
 <div class="wrap">
-  <header style="display:grid;gap:4px">
-    <div class="eyebrow">Rendición de servicios</div>
-    <h1 id="edif">Consorcio</h1>
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div style="display:grid;gap:4px;min-width:0"><div class="eyebrow">Rendición de servicios</div><h1 id="edif">Consorcio</h1></div>
+    <button class="btn ghost sm" id="bInstall">Instalar app</button>
   </header>
+  <div class="install" id="installBanner" hidden>
+    <div><b>Tené esta página como app en tu celular</b><div class="note">Un toque y ves pagos, comprobantes y el alias para pagar.</div></div>
+    <div style="display:flex;gap:8px"><button class="btn sm" id="bInstall2">Ver cómo</button><button class="btn ghost sm" id="bInstallX" aria-label="Cerrar aviso">Ahora no</button></div>
+  </div>
   <div class="toolbar" id="adminTools" hidden>
     <button class="btn ghost sm" id="bView">Ver como vecino</button>
     <button class="btn ghost sm" id="bAdd">Agregar servicio</button>
@@ -230,6 +238,32 @@ $("bSave").onclick=async()=>{
   catch(e){b.disabled=false;b.textContent="Guardar y publicar";$("saveMsg").textContent=e?.code==="conflict"?"Otra versión se publicó antes. Recargá y volvé a cargar el cambio.":"No se pudo publicar: "+(e?.message||e?.code||"error")}
 };
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+
+// Instalar como app (pantalla de inicio)
+const UA=navigator.userAgent||"";
+const esIOS=/iPhone|iPad|iPod/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
+const esAndroid=/Android/i.test(UA);
+const standalone=window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone;
+const PASOS={
+  android:`<ol class="steps"><li>Abrí este link en <b>Chrome</b>.</li><li>Tocá el menú <span class="ico">⋮</span> arriba a la derecha.</li><li>Elegí <b>"Agregar a la pantalla principal"</b> o <b>"Instalar app"</b>.</li><li>Confirmá con <b>"Agregar"</b>. Va a aparecer el ícono junto a tus otras apps.</li></ol>`,
+  ios:`<ol class="steps"><li>Abrí este link en <b>Safari</b> (si lo abriste desde WhatsApp, tocá los tres puntos y elegí "Abrir en Safari").</li><li>Tocá el botón <b>Compartir</b> <span class="ico">⬆</span> abajo en el centro.</li><li>Deslizá y elegí <b>"Agregar a inicio"</b>.</li><li>Tocá <b>"Agregar"</b>. Va a aparecer el ícono en tu pantalla.</li></ol>`
+};
+function abrirInstalar(){
+  let os=esIOS?"ios":"android";
+  const pintar=()=>{
+    $("card").innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><b>Instalar en tu celular</b><button class="btn ghost sm" id="bIX">Cerrar</button></div>
+      <div class="os"><button class="pill" id="osA" aria-pressed="${os==="android"}">Android</button><button class="pill" id="osI" aria-pressed="${os==="ios"}">iPhone</button></div>
+      ${PASOS[os]}
+      <p class="note">Es gratis y no ocupa espacio: se abre siempre la versión actualizada con los últimos pagos.</p>`;
+    $("bIX").onclick=()=>$("sheet").hidden=true;
+    $("osA").onclick=()=>{os="android";pintar()};$("osI").onclick=()=>{os="ios";pintar()};
+  };
+  pintar();$("sheet").hidden=false;
+}
+$("bInstall").onclick=abrirInstalar;$("bInstall2").onclick=abrirInstalar;
+$("bInstallX").onclick=()=>{$("installBanner").hidden=true;try{localStorage.setItem("installX","1")}catch(e){}};
+if(standalone){$("bInstall").hidden=true}
+else{let x=null;try{x=localStorage.getItem("installX")}catch(e){}if(!x&&(esIOS||esAndroid))$("installBanner").hidden=false}
 
 render();
 (async()=>{
