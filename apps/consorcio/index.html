@@ -64,13 +64,15 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
 .note{font-size:.82rem;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:30}
 .empty{padding:24px;text-align:center;color:var(--muted)}
+.steps{margin:0;padding-left:20px;display:grid;gap:8px}
+.ico{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-radius:6px;font-weight:700}
 @media (max-width:360px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media (prefers-reduced-motion:no-preference){.chip,.pill,.btn{transition:transform .08s}.chip:active,.btn:active{transform:scale(.97)}}
 </style>
 
 <div class="wrap">
   <section id="v-deudas" class="stack">
-    <div class="head"><div><div class="eyebrow">Deuda total del edificio</div><div class="big num" id="tot">—</div></div><div class="note" id="sync">Cargando…</div></div>
+    <div class="head"><div><div class="eyebrow">Deuda total del edificio</div><div class="big num" id="tot">—</div></div><div style="display:grid;gap:6px;justify-items:end"><button class="btn ghost" id="bInstall" style="padding:6px 10px;font-size:.82rem">Instalar app</button><div class="note" id="sync">Cargando…</div></div></div>
     <div class="panel split num" id="totSplit"></div>
     <input type="search" id="q" placeholder="Buscar unidad (ej. 7D)" autocomplete="off" inputmode="text">
     <div class="filters">
@@ -235,6 +237,26 @@ async function togglePago(i,val){
   catch(e){toast("No se pudo guardar");renderMes()}
   finally{busy=false}
 }
+
+// ---- Instalar como app ----
+const UA=navigator.userAgent||"";
+const esIOS=/iPhone|iPad|iPod/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
+if(window.matchMedia?.("(display-mode: standalone)").matches||navigator.standalone)$("bInstall").hidden=true;
+const PASOS={
+  android:`<ol class="steps"><li>Abrí el link del panel en <b>Chrome</b>.</li><li>Tocá el menú <span class="ico">⋮</span> arriba a la derecha.</li><li>Elegí <b>"Agregar a la pantalla principal"</b> o <b>"Instalar app"</b>.</li><li>Confirmá con <b>"Agregar"</b>.</li></ol>`,
+  ios:`<ol class="steps"><li>Abrí el link del panel en <b>Safari</b>.</li><li>Tocá el botón <b>Compartir</b> <span class="ico">⬆</span>.</li><li>Elegí <b>"Agregar a inicio"</b>.</li><li>Tocá <b>"Agregar"</b>.</li></ol>`
+};
+$("bInstall").onclick=()=>{
+  let os=esIOS?"ios":"android";
+  const pintar=()=>{
+    $("card").innerHTML=`<div class="head"><h2>Instalar Consorcio al Día</h2><button class="btn ghost" id="bIX" style="padding:6px 10px">Cerrar</button></div>
+      <div class="filters"><button class="pill" id="osA" aria-pressed="${os==="android"}">Android</button><button class="pill" id="osI" aria-pressed="${os==="ios"}">iPhone</button></div>
+      ${PASOS[os]}
+      <p class="note">Para ver tus datos, iniciá sesión en claude.ai en ese navegador. El panel es privado: solo lo abrís vos.</p>`;
+    $("bIX").onclick=closeSheet;$("osA").onclick=()=>{os="android";pintar()};$("osI").onclick=()=>{os="ios";pintar()};
+  };
+  pintar();$("sheet").hidden=false;
+};
 
 // ---- Avisos ----
 let cfg={alias:"",titular:"",dia:15,recargo:10}, cfgLoaded=false;
