@@ -1,0 +1,62 @@
+{
+  "extraKnownMarketplaces": {
+    "context-mode": {
+      "source": {
+        "source": "github",
+        "repo": "mksglu/context-mode"
+      }
+    },
+    "planning-with-files": {
+      "source": {
+        "source": "github",
+        "repo": "OthmanAdi/planning-with-files"
+      }
+    },
+    "codeburn": {
+      "source": {
+        "source": "github",
+        "repo": "getagentseal/codeburn"
+      }
+    },
+    "hallmark": {
+      "source": {
+        "source": "github",
+        "repo": "Nutlope/hallmark"
+      }
+    },
+    "n8n-mcp-skills": {
+      "source": {
+        "source": "github",
+        "repo": "czlonkowski/n8n-skills"
+      }
+    },
+    "webhook-skills": {
+      "source": {
+        "source": "github",
+        "repo": "hookdeck/webhook-skills"
+      }
+    },
+    "marketingskills": {
+      "source": {
+        "source": "github",
+        "repo": "coreyhaines31/marketingskills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "context-mode@context-mode": true,
+    "planning-with-files@planning-with-files": true,
+    "codeburn@codeburn": true,
+    "hallmark@hallmark": true,
+    "n8n-mcp-skills@n8n-mcp-skills": true,
+    "webhook-handler-patterns@webhook-skills": true,
+    "shopify-webhooks@webhook-skills": true,
+    "stripe-webhooks@webhook-skills": true,
+    "paypal-webhooks@webhook-skills": true,
+    "n8n-webhooks@webhook-skills": true,
+    "whatsapp-webhooks@webhook-skills": true,
+    "instagram-webhooks@webhook-skills": true,
+    "tiktok-shop-webhooks@webhook-skills": true,
+    "marketing-skills@marketingskills": true
+  }
+}

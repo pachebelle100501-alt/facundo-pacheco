@@ -37,3 +37,15 @@ Revisar el código antes de instalar. Instalar: `/plugin marketplace add <owner>
 - vargHQ/ecommerce-ai-video-skills — 10 formatos de video para anuncios.
 - Lifecycle-Innovations-Limited/claude-ops — sistema operativo de negocio.
 - noique/cross-border-ecommerce-skills — 58 skills de e-commerce internacional (en chino).
+
+## Estado de instalación
+**Activados en `.claude/settings.json`** (se instalan solos al abrir el repo en Claude Code y aceptar la confianza de la carpeta):
+context-mode, planning-with-files, codeburn, hallmark, n8n-mcp-skills, marketing-skills y, de webhook-skills: patrones generales, Shopify, Stripe, PayPal, n8n, WhatsApp, Instagram y TikTok Shop.
+
+**Copiados en `.claude/skills/`** (licencia MIT, origen en cada `ORIGEN.md`): heditor, product-shots (7 skills) y open-edits (6 skills).
+
+**No instalados:**
+- claude-hud y vargHQ/skills: no pasan la validación de plugins de Claude Code.
+- caveman: deforma la redacción y perjudica los textos para clientes y redes.
+- destructive_command_guard: es un binario en Rust, no un plugin.
+- ecommerce-ai-video-skills: es una guía, sin skills instalables.
