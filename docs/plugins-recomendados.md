@@ -49,3 +49,10 @@ context-mode, planning-with-files, codeburn, hallmark, n8n-mcp-skills, marketing
 - caveman: deforma la redacción y perjudica los textos para clientes y redes.
 - destructive_command_guard: es un binario en Rust, no un plugin.
 - ecommerce-ai-video-skills: es una guía, sin skills instalables.
+
+## Limpieza 2026-11-27
+**Plugins de cuenta a quitar** (fuera de las áreas del estudio o con conectores que fallan): bio-research, unity, unreal-engine, meshy-3d-agent, cfdagent, sp-global, finance, legal, human-resources, zoom-plugin, sales, apollo, customer-support, enterprise-search, operations, product-management, data, wordpress-mcp, imessage.
+
+**Duplicados**: SEO queda solo `searchfit-seo` (fuera `rampstack-seo` y `marketing`). Diseño web queda `frontend-design` + `website-design` (fuera `superdesign` y `design`). Cloudflare y Netlify se usan como conector, no como plugin.
+
+**Conectores**: fuera Expedia, Trivago, OnChainDiligence, ThunderPhone; elegir uno entre Evernote/Notion, Asana/monday.com y Microsoft 365/Google.

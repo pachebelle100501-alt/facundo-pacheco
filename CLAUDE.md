@@ -29,3 +29,6 @@ Respuestas breves y precisas. Ahorrar tokens.
 - Confirmar antes de publicar, enviar, pagar, borrar o gastar créditos.
 - Nada de secretos en el repo.
 - Verificar el resultado antes de darlo por terminado.
+
+## Mantenimiento
+Revisión semanal según `docs/revision-semanal.md`. Antes de nombrar un skill o MCP en un agente, verificar que esté instalado.
