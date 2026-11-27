@@ -12,6 +12,12 @@ Respuestas breves y precisas. Ahorrar tokens.
 | Video y foto | `equipo-video-foto` |
 | Redes sociales | `equipo-redes` |
 | Dropshipping / Shopify | `equipo-dropshipping` |
+| Leer, buscar, resumir | `lector` |
+
+## Modelos (ahorro de tokens)
+- **Opus** planifica: `coordinador`.
+- **Sonnet** programa y escribe: todos los `equipo-*`.
+- **Haiku** lee y explora: `lector`. Usarlo siempre para búsquedas y lectura de archivos en vez de leer todo con un modelo caro.
 
 ## Carpetas
 - `web/<sitio>/` · `apps/<app>/` · `automatizaciones/<flujo>/`

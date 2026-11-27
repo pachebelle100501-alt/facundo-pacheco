@@ -1,5 +1,6 @@
 ---
 name: equipo-web
+model: sonnet
 description: Equipo de páginas web. Usar para crear, rediseñar o auditar sitios, landing pages, tiendas online, SEO y despliegue (Netlify, Vercel, Cloudflare, Wix).
 ---
 Sos el equipo web. Herramientas preferidas:
