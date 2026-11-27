@@ -1,0 +1,221 @@
+<title>Servicios del Edificio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: hoja de rendición de una columna, lista de servicios con estado y comprobante; barra de edición solo para la administración */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --fg:#14202b; --muted:#5d6b78; --line:#dde3e9;
+  --accent:#1f5f8b; --accent-ink:#ffffff; --warn:#a86a12; --warn-bg:#fbf0dc; --ok:#2f7d4f; --ok-bg:#e3f3e9; --danger:#b4432c;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f161d; --surface:#18222c; --fg:#e7edf2; --muted:#93a2b0; --line:#2a3743;
+  --accent:#6fb0dc; --accent-ink:#0b1620; --warn:#e9b25a; --warn-bg:#352812; --ok:#6fcf97; --ok-bg:#16301f; --danger:#f08a70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161d; --surface:#18222c; --fg:#e7edf2; --muted:#93a2b0; --line:#2a3743;
+  --accent:#6fb0dc; --accent-ink:#0b1620; --warn:#e9b25a; --warn-bg:#352812; --ok:#6fcf97; --ok-bg:#16301f; --danger:#f08a70; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 110px;display:grid;gap:14px}
+h1,h2{font-family:var(--f-display);margin:0;text-wrap:balance}
+h1{font-size:1.5rem}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.note{font-size:.82rem;color:var(--muted)}
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:18px;display:grid;gap:12px}
+.hero .eyebrow{color:inherit;opacity:.8}
+.hero .big{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1.1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{min-width:0}
+.stats b{display:block;font-size:1rem}
+.months{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.pill{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.pill[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.svc{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.svc:last-child{border-bottom:0}
+.svc .name{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.svc .amt{font-weight:600;text-align:right}
+.svc .meta{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{font-size:.75rem;font-weight:600;padding:3px 8px;border-radius:999px}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.tag.pend{background:var(--warn-bg);color:var(--warn)}
+.comp{font:inherit;font-size:.82rem;font-weight:600;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;text-decoration:none}
+.comp img{width:28px;height:28px;object-fit:cover;border-radius:4px}
+.admin{grid-column:1/-1;display:grid;gap:8px;background:var(--bg);border-radius:10px;padding:10px;margin-top:4px}
+.admin .r{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.admin label{display:grid;gap:2px;font-size:.78rem;color:var(--muted);min-width:0}
+.admin input[type=text],.admin input[type=number],.admin input[type=date],.sheet input{width:100%;font:inherit;font-size:.9rem;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.admin .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.9rem;color:var(--fg)!important;grid-template-columns:none!important}
+.chk input{width:20px;height:20px;accent-color:var(--ok)}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.6;cursor:default}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;justify-content:space-between;z-index:10}
+.sheet{position:fixed;inset:0;background:rgba(10,20,30,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.sheet .card{background:var(--surface);color:var(--fg);border-radius:14px;padding:16px;max-width:640px;width:100%;max-height:90vh;overflow:auto;display:grid;gap:12px}
+.sheet img{width:100%;border-radius:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:30}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+footer{text-align:center}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:4px">
+    <div class="eyebrow">Rendición de servicios</div>
+    <h1 id="edif">Consorcio</h1>
+  </header>
+  <div class="toolbar" id="adminTools" hidden>
+    <button class="btn ghost sm" id="bView">Ver como vecino</button>
+    <button class="btn ghost sm" id="bAdd">Agregar servicio</button>
+    <button class="btn ghost sm" id="bMonth">Nuevo mes</button>
+    <button class="btn ghost sm" id="bName">Nombre del edificio</button>
+  </div>
+  <nav class="months" id="months" aria-label="Meses"></nav>
+  <section class="hero" id="hero"></section>
+  <section class="list" id="list"></section>
+  <footer class="note" id="foot"></footer>
+</div>
+
+<div class="savebar" id="savebar" hidden>
+  <span class="note" id="saveMsg">Tenés cambios sin publicar</span>
+  <button class="btn" id="bSave">Guardar y publicar</button>
+</div>
+<div class="sheet" id="sheet" hidden><div class="card" id="card"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="application/json" id="state">{"edificio":"Consorcio","actualizado":"2026-11-27","meses":[{"id":"2026-09","titulo":"Septiembre 2026","servicios":[{"id":"s1","concepto":"Prosegur","monto":204000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s2","concepto":"Prosegur","monto":337875,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s3","concepto":"Marino mantenimiento y reparación","monto":182100,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s4","concepto":"Fumigación","monto":19000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s5","concepto":"Seguro","monto":123378,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s6","concepto":"EPE (boleta de luz)","monto":576514,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s7","concepto":"Limpieza","monto":156000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s8","concepto":"Seguro limpieza ART","monto":63827,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s9","concepto":"Honorarios tareas administrativas","monto":120000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s10","concepto":"Ferretería y materiales","monto":225528,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s11","concepto":"Herrero","monto":197000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s12","concepto":"Mantenimiento edificio","monto":343000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s13","concepto":"Electricidad","monto":231262,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s14","concepto":"Plomero","monto":40000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s15","concepto":"Mano de obra y materiales gas","monto":1850000,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s16","concepto":"Tasa de ascensores","monto":0,"alias":"","pagado":false,"fecha":"","comp":null},{"id":"s17","concepto":"Mantenimiento matafuegos","monto":211800,"alias":"","pagado":false,"fecha":"","comp":null}]}]}</script>
+
+<script>
+const PRISTINE=document.body.innerHTML;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>"$ "+Math.round(n||0).toLocaleString("es-AR");
+const fdate=d=>{if(!d)return"";const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
+let state=JSON.parse($("state").textContent);
+let sel=[...state.meses].sort((a,b)=>b.id.localeCompare(a.id))[0]?.id;
+let canEdit=false, viewAsNeighbor=false, dirty=false, art=null, assets=null;
+const blobUrl=id=>"/_blob/"+encodeURIComponent(id);
+
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2400)}
+const mes=()=>state.meses.find(m=>m.id===sel);
+const editing=()=>canEdit&&!viewAsNeighbor;
+function markDirty(){dirty=true;$("savebar").hidden=!canEdit;$("saveMsg").textContent="Tenés cambios sin publicar"}
+
+function render(){
+  $("edif").textContent=state.edificio||"Consorcio";
+  $("adminTools").hidden=!canEdit;
+  $("bView").textContent=viewAsNeighbor?"Volver a editar":"Ver como vecino";
+  const ms=[...state.meses].sort((a,b)=>b.id.localeCompare(a.id));
+  $("months").innerHTML=ms.map(m=>`<button class="pill" data-m="${esc(m.id)}" aria-pressed="${m.id===sel}">${esc(m.titulo)}</button>`).join("");
+  $("months").querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{sel=b.dataset.m;render()});
+  const m=mes();
+  if(!m){$("hero").innerHTML='<div>Todavía no hay meses cargados.</div>';$("list").innerHTML="";return}
+  const sv=m.servicios||[];
+  const total=sv.reduce((a,s)=>a+(s.monto||0),0);
+  const pag=sv.filter(s=>s.pagado);
+  const pagTot=pag.reduce((a,s)=>a+(s.monto||0),0);
+  const conComp=pag.filter(s=>s.comp).length;
+  $("hero").innerHTML=`<div><div class="eyebrow">${esc(m.titulo)} · pagado a proveedores</div><div class="big num">${fmt(pagTot)}</div></div>
+    <div class="stats num"><div><span class="eyebrow">Servicios pagados</span><b>${pag.length} de ${sv.length}</b></div><div><span class="eyebrow">Con comprobante</span><b>${conComp} de ${pag.length}</b></div><div><span class="eyebrow">Total del mes</span><b>${fmt(total)}</b></div></div>`;
+  if(!sv.length){$("list").innerHTML='<div class="empty">No hay servicios cargados en este mes.</div>';return}
+  $("list").innerHTML=sv.map((s,i)=>{
+    const comp=s.comp?(String(s.comp.tipo||"").startsWith("image/")
+      ?`<button class="comp" data-ver="${i}"><img src="${blobUrl(s.comp.id)}" alt="">Ver comprobante</button>`
+      :`<a class="comp" href="${blobUrl(s.comp.id)}" target="_blank" rel="noopener">Ver comprobante (PDF)</a>`):"";
+    const estado=s.pagado?`<span class="tag ok">Pagado${s.fecha?" el "+fdate(s.fecha):""}</span>`:`<span class="tag pend">Pendiente</span>`;
+    const adm=editing()?`<div class="admin">
+      <div class="r"><label>Concepto<input type="text" id="c-${s.id}" data-f="concepto" data-i="${i}" value="${esc(s.concepto)}"></label>
+      <label>Monto<input type="number" inputmode="numeric" id="m-${s.id}" data-f="monto" data-i="${i}" value="${s.monto||0}"></label></div>
+      <div class="r"><label>Alias / CBU para pagar<input type="text" id="a-${s.id}" data-f="alias" data-i="${i}" value="${esc(s.alias)}" placeholder="ej. prosegur.pagos"></label>
+      <label>Fecha de pago<input type="date" id="f-${s.id}" data-f="fecha" data-i="${i}" value="${esc(s.fecha)}"></label></div>
+      <div class="acts">
+        <label class="chk"><input type="checkbox" id="p-${s.id}" data-pag="${i}" ${s.pagado?"checked":""}>Pagado</label>
+        ${s.alias?`<button class="btn ghost sm" data-copy="${i}">Copiar alias</button>`:""}
+        <label class="btn ghost sm" style="display:inline-block">${s.comp?"Cambiar comprobante":"Subir comprobante"}<input type="file" id="u-${s.id}" data-up="${i}" accept="image/*,application/pdf" hidden></label>
+        ${s.comp?`<button class="btn ghost sm danger" data-rmc="${i}">Quitar comprobante</button>`:""}
+        <button class="btn ghost sm danger" data-del="${i}">Borrar servicio</button>
+      </div></div>`:"";
+    return `<div class="svc"><div class="name">${esc(s.concepto)}</div><div class="amt num">${fmt(s.monto)}</div><div class="meta">${estado}${comp}</div>${adm}</div>`;
+  }).join("");
+  const L=$("list");
+  L.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>verComp(sv[+b.dataset.ver]));
+  L.querySelectorAll("[data-f]").forEach(inp=>inp.onchange=()=>{const s=sv[+inp.dataset.i],f=inp.dataset.f;s[f]=f==="monto"?Math.max(0,Number(inp.value)||0):inp.value.trim();markDirty();render()});
+  L.querySelectorAll("[data-pag]").forEach(cb=>cb.onchange=()=>{const s=sv[+cb.dataset.pag];s.pagado=cb.checked;if(cb.checked&&!s.fecha)s.fecha=new Date().toISOString().slice(0,10);if(!cb.checked)s.fecha="";markDirty();render()});
+  L.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const a=sv[+b.dataset.copy].alias;try{await navigator.clipboard.writeText(a);toast("Alias copiado: "+a)}catch(e){toast("Alias: "+a)}});
+  L.querySelectorAll("[data-up]").forEach(inp=>inp.onchange=()=>subir(sv[+inp.dataset.up],inp.files[0]));
+  L.querySelectorAll("[data-rmc]").forEach(b=>b.onclick=()=>{sv[+b.dataset.rmc].comp=null;markDirty();render()});
+  L.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>confirmar(`¿Borrar "${sv[+b.dataset.del].concepto}" de ${m.titulo}?`,()=>{sv.splice(+b.dataset.del,1);markDirty();render()}));
+  $("foot").textContent="Última actualización: "+fdate(state.actualizado)+". Administración del consorcio.";
+}
+
+function verComp(s){
+  $("card").innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><b>${esc(s.concepto)} · ${fmt(s.monto)}</b><button class="btn ghost sm" id="bX">Cerrar</button></div><img src="${blobUrl(s.comp.id)}" alt="Comprobante de ${esc(s.concepto)}">`;
+  $("bX").onclick=()=>$("sheet").hidden=true;$("sheet").hidden=false;
+}
+$("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
+
+function confirmar(txt,ok){
+  $("card").innerHTML=`<b>${esc(txt)}</b><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" id="bNo">Cancelar</button><button class="btn" id="bSi">Confirmar</button></div>`;
+  $("bNo").onclick=()=>$("sheet").hidden=true;$("bSi").onclick=()=>{$("sheet").hidden=true;ok()};$("sheet").hidden=false;
+}
+function formulario(titulo,campos,ok){
+  $("card").innerHTML=`<b>${esc(titulo)}</b>${campos.map(c=>`<label style="display:grid;gap:4px;font-size:.85rem;color:var(--muted)">${esc(c.label)}<input id="fm-${c.id}" type="${c.type||"text"}" value="${esc(c.value||"")}"></label>`).join("")}<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" id="bNo">Cancelar</button><button class="btn" id="bSi">Aceptar</button></div>`;
+  $("bNo").onclick=()=>$("sheet").hidden=true;
+  $("bSi").onclick=()=>{const v={};campos.forEach(c=>v[c.id]=$("fm-"+c.id).value.trim());if(ok(v)!==false)$("sheet").hidden=true};
+  $("sheet").hidden=false;
+}
+
+async function subir(s,file){
+  if(!file||!assets)return;
+  if(file.size>20*1024*1024){toast("El archivo supera 20 MB");return}
+  toast("Subiendo comprobante…");
+  try{const r=await assets.upload(file);s.comp={id:r.id,tipo:r.contentType||file.type,nombre:file.name.slice(0,120)};if(!s.pagado){s.pagado=true;s.fecha=s.fecha||new Date().toISOString().slice(0,10)}markDirty();render();toast("Comprobante cargado")}
+  catch(e){toast("No se pudo subir: "+(e?.message||"error"))}
+}
+
+$("bView").onclick=()=>{viewAsNeighbor=!viewAsNeighbor;render()};
+$("bName").onclick=()=>formulario("Nombre del edificio",[{id:"n",label:"Nombre",value:state.edificio}],v=>{if(!v.n)return false;state.edificio=v.n.slice(0,80);markDirty();render()});
+$("bAdd").onclick=()=>formulario("Agregar servicio a "+(mes()?.titulo||""),[{id:"c",label:"Concepto"},{id:"m",label:"Monto",type:"number"},{id:"a",label:"Alias / CBU (opcional)"}],v=>{
+  if(!v.c||!mes())return false;mes().servicios.push({id:"s"+Date.now(),concepto:v.c.slice(0,120),monto:Math.max(0,Number(v.m)||0),alias:v.a.slice(0,80),pagado:false,fecha:"",comp:null});markDirty();render()});
+$("bMonth").onclick=()=>{
+  const d=new Date();d.setMonth(d.getMonth());
+  formulario("Nuevo mes (copia los servicios y alias del mes elegido, sin pagos)",[{id:"m",label:"Mes",type:"month",value:d.toISOString().slice(0,7)}],v=>{
+    if(!/^\d{4}-\d{2}$/.test(v.m))return false;
+    if(state.meses.some(x=>x.id===v.m)){toast("Ese mes ya existe");return false}
+    const [y,mm]=v.m.split("-").map(Number);
+    let t=new Date(y,mm-1,1).toLocaleDateString("es-AR",{month:"long",year:"numeric"}).replace(" de "," ");t=t[0].toUpperCase()+t.slice(1);
+    const base=mes()?.servicios||[];
+    state.meses.push({id:v.m,titulo:t,servicios:base.map((s,i)=>({id:"s"+(i+1),concepto:s.concepto,monto:s.monto,alias:s.alias,pagado:false,fecha:"",comp:null}))});
+    sel=v.m;markDirty();render();
+  });
+};
+
+$("bSave").onclick=async()=>{
+  if(!art)return;
+  const b=$("bSave");b.disabled=true;b.textContent="Publicando…";
+  state.actualizado=new Date().toISOString().slice(0,10);
+  const json=JSON.stringify(state).replace(/</g,"\\u003c");
+  const body=PRISTINE.replace(/(<script type="application\/json" id="state">)[\s\S]*?(<\/script>)/,(_,a,c)=>a+json+c);
+  const reset=document.head.querySelector("style")?.textContent||"";
+  const doc=`<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${reset}</style></head><body>${body}</body></html>`;
+  try{await art.publish(doc);dirty=false;$("saveMsg").textContent="Publicado";toast("Publicado para los vecinos")}
+  catch(e){b.disabled=false;b.textContent="Guardar y publicar";$("saveMsg").textContent=e?.code==="conflict"?"Otra versión se publicó antes. Recargá y volvé a cargar el cambio.":"No se pudo publicar: "+(e?.message||e?.code||"error")}
+};
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+
+render();
+(async()=>{
+  const user=await window.claude?.use?.("user");
+  const ok=(await user?.canEdit?.())??false;
+  if(!ok)return;
+  art=await window.claude.use("artifact");
+  assets=await window.claude.use("assets");
+  canEdit=!!art;render();
+})();
+</script>

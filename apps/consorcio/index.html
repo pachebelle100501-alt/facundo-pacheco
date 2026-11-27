@@ -81,10 +81,11 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
   </section>
 
   <section id="v-pagar" class="stack" hidden>
-    <div class="head"><div><div class="eyebrow" id="pMes">Pagos a proveedores</div><div class="big num" id="pPend">—</div><div class="note">pendiente de pagar</div></div></div>
+    <div class="head"><div><div class="eyebrow" id="pMes">Pagos a proveedores</div><div class="big num" id="pPend">—</div><div class="note">total de egresos</div></div></div>
     <div class="panel split num" id="pSplit"></div>
+    <a class="btn" href="https://claude.ai/artifact/QLLoA3nJsB6hFZfwPPpmFN" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">Gestionar pagos, alias y comprobantes →</a>
+    <p class="note">Los pagos se marcan y se respaldan con comprobante en la página de vecinos (modo edición solo para vos). Esta lista es el detalle del resumen mensual.</p>
     <div class="panel" id="pList"><div class="empty">Cargando…</div></div>
-    <p class="note">Tildá cada servicio cuando lo pagás. Queda guardado.</p>
   </section>
 
   <section id="v-mes" class="stack" hidden>
@@ -197,11 +198,10 @@ function renderMes(){
   const eg=mes.egresos||[], ing=mes.ingresos||[];
   const tE=eg.reduce((a,b)=>a+(b.monto||0),0), pag=eg.filter(x=>x.pagado).reduce((a,b)=>a+(b.monto||0),0);
   const tI=ing.reduce((a,b)=>a+(b.monto||0),0)+(mes.saldoAnterior||0);
-  $("pMes").textContent="Pagos a proveedores · "+mesNombre();
-  $("pPend").textContent=fmt(tE-pag);
-  $("pSplit").innerHTML=`<div><div class="eyebrow">Total</div><div class="v">${fmt(tE)}</div></div><div><div class="eyebrow">Pagado</div><div class="v">${fmt(pag)}</div></div><div><div class="eyebrow">Servicios</div><div class="v">${eg.filter(x=>x.pagado).length}/${eg.length}</div></div>`;
-  $("pList").innerHTML=eg.map((x,i)=>`<div class="row ${x.pagado?"pagado":""}"><label><input type="checkbox" id="eg${i}" data-i="${i}" ${x.pagado?"checked":""}><span class="c">${esc(x.concepto)}</span></label><b class="num">${fmt(x.monto)}</b></div>`).join("")+`<div class="row total"><span>Total egresos</span><span class="num">${fmt(tE)}</span></div>`;
-  $("pList").querySelectorAll("[data-i]").forEach(cb=>cb.onchange=()=>togglePago(+cb.dataset.i,cb.checked));
+  $("pMes").textContent="Servicios del mes · "+mesNombre();
+  $("pPend").textContent=fmt(tE);
+  $("pSplit").innerHTML=`<div><div class="eyebrow">Servicios</div><div class="v">${eg.length}</div></div><div><div class="eyebrow">Ingresos</div><div class="v">${fmt(tI)}</div></div><div><div class="eyebrow">Saldo</div><div class="v">${fmt(tI-tE)}</div></div>`;
+  $("pList").innerHTML=eg.map(x=>`<div class="row"><span class="c">${esc(x.concepto)}</span><b class="num">${fmt(x.monto)}</b></div>`).join("")+`<div class="row total"><span>Total egresos</span><span class="num">${fmt(tE)}</span></div>`;
   $("mTit").textContent="Resumen "+mesNombre();
   $("mSaldo").textContent=fmt(tI-tE);
   $("mIng").innerHTML=ing.map(x=>`<div class="row"><span class="c">${esc(x.concepto)}</span><span class="num">${fmt(x.monto)}</span></div>`).join("")+`<div class="row"><span class="c">Saldo mes anterior</span><span class="num">${fmt(mes.saldoAnterior)}</span></div><div class="row total"><span>Total ingresos</span><span class="num">${fmt(tI)}</span></div>`;
