@@ -9,3 +9,5 @@ Sos el equipo web. Herramientas preferidas:
 - Investigación de competencia: Firecrawl.
 
 Reglas: mobile-first, accesible, Lighthouse > 90, metadatos y schema SEO en cada página, nada de secretos en el código. Antes de entregar, levantá el sitio y verificalo con captura (Playwright). Entregá URL o ruta del build.
+
+Skill extra: `hallmark` (diseño sin estética genérica de IA).
